@@ -27,7 +27,18 @@ Ext.define('CustomApp', {
             bodyPadding: 5,
             items: [
                 {
-                    fieldLabel: 'Query',
+                    fieldLabel: 'Ext Fiters',
+                    itemId: 'filterField',
+                    anchor:'100%',
+                    width: 700,
+                    height: 100,
+                    xtype: 'textarea',
+                    value: '[\n'+
+                            '    { property: "ScheduleState", operator: "exists", value:true }\n'+
+                            ']'
+                },
+                {
+                    fieldLabel: 'Raw Query',
                     itemId: 'queryField',
                     anchor:'100%',
                     width: 700,
@@ -43,20 +54,6 @@ Ext.define('CustomApp', {
                     anchor: '100%',
                     width: 700,
                     value: "ObjectID, ScheduleState"
-                },
-                {
-                    fieldLabel: 'Sort',
-                    itemId: 'sortField',
-                    anchor: '100%',
-                    width: 700,
-                    value: "{'ObjectID' : -1, '_ValidFrom': 1}"
-                },
-                {
-                    fieldLabel: 'Page Size',
-                    itemId: 'pageSizeField',
-                    anchor: '100%',
-                    width: 700,
-                    value: '1000'
                 }
             ],
             
@@ -83,8 +80,12 @@ Ext.define('CustomApp', {
     
     chartClicked: function(){
         
+        var filterField = this.down('#filterField');
+        var filters = Ext.decode(filterField.getValue());
+
         var queryField = this.down('#queryField');
         var query = queryField.getValue();
+
         var selectedFields = this.down('#fieldsField').getValue();
         if(selectedFields){
             if(selectedFields === 'true'){
@@ -94,16 +95,9 @@ Ext.define('CustomApp', {
                 selectedFields = selectedFields.split(', ');
             }
         }
-        
-        var sort = this.down('#sortField').getValue();
-        
-        var pageSize = this.down('#pageSizeField').getValue();
-        var parsedPageSize = parseInt(pageSize, 10);
-        // don't allow empty or 0 pagesize
-        pageSize = (parsedPageSize) ? parsedPageSize : 10;
 
         var callback = Ext.bind(this.processSnapshots, this);
-        this.doSearch(query, selectedFields, sort, pageSize, callback);
+        this.doSearch(filters, query, selectedFields, callback);
     },
     
     createSortMap: function(csvFields){
@@ -118,12 +112,13 @@ Ext.define('CustomApp', {
         return sortMap;
     },
     
-    doSearch: function(query, fields, sort, pageSize, callback){
+    doSearch: function(filters, query, fields, callback){
         var wrappedStoreConfig = {
             context: {
                 workspace: this.context.getWorkspace(),
                 project: this.context.getProject()
             },
+            filters: filters,
             rawFind: query,
             hydrate: ["ScheduleState"]
         };
@@ -195,12 +190,20 @@ Ext.define('CustomApp', {
             store: inMemoryStore,
 
             height: 400,
-            series : [{
+            series : [
+            {
               type : 'column',
               yField : 'ObjectID_Count',
               name : 'Count',
               visible : true
-            }],
+            },
+            {
+              type : 'line',
+              yField : 'ObjectID_Count',
+              name : 'Count',
+              visible : true
+            }
+            ],
             
             xField : 'ScheduleState',
             chartConfig : {
@@ -267,86 +270,6 @@ Ext.define('CustomApp', {
         var chartHolder = this.down('#chartHolder');
         chartHolder.removeAll(true);
         chartHolder.add(chartConfig);
-
-        
-        // if(sort){
-        //     params.sort = sort;
-        // }
-        
-        // if(pageSize){
-        //     params.pagesize = pageSize;
-        // }
-        
-        // Ext.Ajax.cors = true;
-        // Ext.Ajax.request({
-        //     url: queryUrl,
-        //     method: 'GET',
-        //     params: params,
-        //     withCredentials: true,
-        //     success: function(response){
-        //         var text = response.responseText;
-        //         var json = Ext.JSON.decode(text);
-        //         callback(json.Results);
-        //     }
-        // });
     }
     
-  //   processSnapshots: function(snapshots){
-        
-        
-  //       var groups = lumenize.groupBy(snapshots, groupBySpec);
-  //       var rows = this.convertGroupingsToRows(groups);
-        
-  //       var snapshotStore = Ext.create('Ext.data.Store', {
-  //           storeId:'snapshotStore',
-  //           fields: ["KanbanState", "ObjectID_Count"],
-  //           data: rows,
-  //           proxy: {
-  //               type: 'memory',
-  //               reader: {
-  //                   type: 'json',
-  //                   root: 'rows'
-  //               }
-  //           }
-  //       });
-        
-		// var chart = 
-        
-        
-  //   },
-    
-    
-    
-  //   getFieldsFromSnapshots: function(snapshots){
-  //       if(snapshots.length === 0){
-  //           return [];
-  //       }
-        
-  //       var snapshot = snapshots[0];
-  //       var fields = [];
-  //       for(var key in snapshot){
-  //           if (snapshot.hasOwnProperty(key)){
-  //               fields.push(key);
-  //           }
-  //       }
-        
-  //       return fields;
-  //   },
-    
-  //   createColumnsForFields: function(fields){
-  //       var columns = [];
-  //       for(var i=0; i < fields.length; ++i){
-  //           var col = {
-  //               header: fields[i],
-  //               dataIndex: fields[i]
-  //           };
-            
-  //           if(fields[i] === 'Name'){
-  //               col.flex = 1;
-  //           }
-  //           columns.push(col);
-  //       }
-        
-  //       return columns;
-  //   }
 });

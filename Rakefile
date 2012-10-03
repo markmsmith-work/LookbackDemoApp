@@ -183,7 +183,7 @@ module Rally
     ## Simple object wrapping the configuration of an App
     class AppConfig
       SDK_RELATIVE_URL = "/apps"
-      SDK_ABSOLUTE_URL = "http://localhost:7001/apps"
+      SDK_ABSOLUTE_URL = "https://hackathon.rallydev.com/apps"
       SDK_FILE = "sdk.js"
       SDK_DEBUG_FILE = "sdk-debug.js"
 

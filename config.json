@@ -1,7 +1,7 @@
 {
-    "name": "AnalyticsChartApp",
+    "name": "LookbackDemoApp",
     "className": "CustomApp",
-    "sdk": "2.0p4",
+    "sdk": "2.0p4", //TODO make p5
     "javascript": [
         "App.js"
     ],

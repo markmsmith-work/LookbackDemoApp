@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AnalyticsChartApp</title>
+
+    <script type="text/javascript" src="sdk-debug.js?server=https://rally1.rallydev.com&path=file:///Users/marks/projects/markmsmith-work/LookbackDemoApp/"></script>
+
+    <script type="text/javascript">
+        Rally.onReady(function() {
+            Rally.loadScripts([
+                "App.js"
+            ], function() {
+                Rally.launchApp('CustomApp', {
+                    name: 'AnalyticsChartApp'
+                })
+            }, true);
+        });
+    </script>
+
+<link rel="stylesheet" type="text/css" href="app.css">
+</head>
+<body></body>
+</html>

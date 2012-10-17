@@ -279,7 +279,6 @@ Ext.define('CustomApp', {
     },
 
     chartItClicked: function(){
-
         var query = this._getJsonFieldValue('query');
         var fields = this._getJsonFieldValue('fields');
         var hydrate = this._getJsonFieldValue('hydrate');

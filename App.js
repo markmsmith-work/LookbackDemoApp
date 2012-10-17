@@ -4,7 +4,7 @@ Ext.define('Rally.data.lookback.SnapshotStoreOtherUrl', {
         constructor: function(config) {
             this.callParent([config]);
             // temporary override needed since need different server and workspace
-            this.proxy.url = 'https://hackathon.rallydev.com/analytics2/v2.0/service/rally/workspace/41529001/artifact/snapshot/query';
+            this.proxy.url = 'https://rally1.rallydev.com/analytics2/v2.0/service/rally/workspace/41529001/artifact/snapshot/query';
         }
     });
 
@@ -27,7 +27,7 @@ Ext.define('CustomApp', {
             defaultType: 'textarea',
             bodyPadding: 5,
             items: [
-                // query text area will be added here by launch
+                // query text area will be added here by launch()
 
                 {
                     xtype: 'textfield',
@@ -74,26 +74,26 @@ Ext.define('CustomApp', {
                     height: 100,
                     value: '[\n'+
                            '    {\n'+
-                           '        "name": "P1",\n'+
-                           '        "f": "function (row) {\n'+
+                           '        "name": "p1",\n'+
+                           '        "f": function (row) {\n'+
                            '         if(row.Priority == "Resolve Immediately"){\n'+
                            '           return 1;\n'+
                            '         }\n'+
                            '         else{\n'+
                            '           return 0;\n'+
                            '         }\n'+
-                           '      }"\n'+
+                           '      }\n'+
                            '    },\n'+
                            '    {\n'+
-                           '        "name": "P2",\n'+
-                           '        "f": "function (row) {\n'+
+                           '        "name": "p2",\n'+
+                           '        "f": function (row) {\n'+
                            '         if(row.Priority == "High Attention"){\n'+
                            '           return 1;\n'+
                            '         }\n'+
                            '         else{\n'+
                            '           return 0;\n'+
                            '         }\n'+
-                           '       }"\n'+
+                           '       }\n'+
                            '    }\n'+
                            ']'
                 },
@@ -105,14 +105,14 @@ Ext.define('CustomApp', {
                     height: 100,
                     value: '[\n'+
                            '    {\n'+
-                           '        "name": "P1 Count",\n'+
+                           '        "as": "p1Count",\n'+
                            '        "f": "$sum",\n'+
-                           '        "field": "P1"\n'+
+                           '        "field": "p1"\n'+
                            '    },\n'+
                            '    {\n'+
-                           '        "name": "P2 Count",\n'+
+                           '        "as": "p2Count",\n'+
                            '        "f": "$sum",\n'+
-                           '        "field": "P2"\n'+
+                           '        "field": "p2"\n'+
                            '    }\n'+
                            ']'
                 },
@@ -123,8 +123,49 @@ Ext.define('CustomApp', {
                     width: 700,
                     height: 100,
                     value: '{\n'+
-                            '    { property: "ScheduleState", operator: "exists", value:true }\n'+
-                            '}'
+                           '    "xtype": "rallychart",\n'+
+                           '    "itemId": "chart",\n'+
+                           '    "height": 400,\n'+
+                           '    "chartConfig": {\n'+
+                           '        "chart": {\n'+
+                           '            "defaultSeriesType": "line"\n'+
+                           '        },\n'+
+                           '        "credits": {\n'+
+                           '            "enabled": false\n'+
+                           '        },\n'+
+                           '        "title": {\n'+
+                           '            "text": "Count of P1s and P2s over time"\n'+
+                           '        },\n'+
+                           '        "xAxis": {\n'+
+                           '            "tickmarkPlacement": "on",\n'+
+                           '            "title": {\n'+
+                           '                "enabled": false\n'+
+                           '            }\n'+
+                           '        },\n'+
+                           '        "yAxis": [\n'+
+                           '            {\n'+
+                           '                "title": {\n'+
+                           '                    "text": "Count"\n'+
+                           '                },\n'+
+                           '                "min": 0\n'+
+                           '            }\n'+
+                           '        ]\n'+
+                           '    },\n'+
+                           '    "series": [\n'+
+                           '        {\n'+
+                           '            "name": "P1 Count",\n'+
+                           '            "id": "p1CountSeries",\n'+
+                           '            "yField": "p1Count",\n'+
+                           '            "visible": true\n'+
+                           '        },\n'+
+                           '        {\n'+
+                           '            "name": "P2 Count",\n'+
+                           '            "id": "p2CountSeries",\n'+
+                           '            "yField": "p2Count",\n'+
+                           '            "visible": true\n'+
+                           '        }\n'+
+                           '    ]\n'+
+                           '}'
                 }
             ],
 
@@ -147,6 +188,7 @@ Ext.define('CustomApp', {
     ],
     launch: function() {
         this.lumenize = window._lumenize;
+        this.lumenize.ChartTime.setTZPath("pointless");
 
         var button = this.down('#chartItButton');
         button.on('click', this.chartItClicked, this);
@@ -167,7 +209,7 @@ Ext.define('CustomApp', {
             width: 700,
             height: 100,
             value: '{\n'+
-                    '     _TypeHierarhcy:"Defect",\n'+
+                    '     _TypeHierarchy:"Defect",\n'+
                     '     Priority:{$in:["Resolve Immediately", "High Attention"]},\n'+
                     '     _ProjectHierarchy: '+ projectOID +'\n'+
                     '}'
@@ -238,10 +280,11 @@ Ext.define('CustomApp', {
 
     chartItClicked: function(){
 
-        var query = this._getFieldValue('query');
+        var query = this._getJsonFieldValue('query');
+        var fields = this._getJsonFieldValue('fields');
+        var hydrate = this._getJsonFieldValue('hydrate');
 
-        var rangeSpecStr = this._getFieldValue('timelineSpec');
-        var rangeSpecJson = Ext.decode(rangeSpecStr);
+        var rangeSpecJson = this._getJsonFieldValue('timelineSpec');
 
         // add the workdays from the workspace config if they're not specified
         if(!rangeSpecJson.workDays){
@@ -249,21 +292,8 @@ Ext.define('CustomApp', {
         }
         var rangeSpec = new this.lumenize.ChartTimeRange(rangeSpecJson);
 
-        var derivedFieldsStr = this._getFieldValue('derivedFields');
-        var derivedFields = Ext.decode(derivedFieldsStr);
-
-        var aggregationSpecStr = this._getFieldValue('aggregationSpec');
-        var aggregationSpec = Ext.decode(aggregationSpecStr);
-
-        // var selectedFields = this.down('#fieldsField').getValue();
-        // if(selectedFields){
-        //     if(selectedFields === 'true'){
-        //         selectedFields = true;
-        //     }
-        //     else{
-        //         selectedFields = selectedFields.split(', ');
-        //     }
-        // }
+        var derivedFields = this._getJsonWithFunctionsFieldValue('derivedFields');
+        var aggregationSpec = this._getJsonFieldValue('aggregationSpec');
 
         this.doSearch(query, fields, hydrate, rangeSpec, derivedFields, aggregationSpec);
     },
@@ -272,17 +302,13 @@ Ext.define('CustomApp', {
       return this.down('#'+ fieldItemId +'Field').getValue();
     },
 
-    // createSortMap: function(csvFields){
-    //     var fields = csvFields.split(', ');
-    //     var sortMap = {};
-    //     for(var field in fields){
-    //         if(fields.hasOwnProperty(field)){
-    //             sortMap[field] = 1;
-    //         }
-    //     }
+    _getJsonFieldValue: function(fieldItemId){
+      return Ext.decode( this._getFieldValue(fieldItemId) );
+    },
 
-    //     return sortMap;
-    // },
+    _getJsonWithFunctionsFieldValue: function(fieldItemId){
+      return eval( this._getFieldValue(fieldItemId) );
+    },
 
     doSearch: function(query, fields, hydrate, rangeSpec, derivedFields, aggregationSpec){
         var wrappedStoreConfig = {
@@ -291,7 +317,7 @@ Ext.define('CustomApp', {
                 project: this.context.getProject()
             },
             rawFind: query,
-            fields: fields,
+            fetch: fields,
             hydrate: hydrate,
             sorters: [
               {
@@ -304,7 +330,7 @@ Ext.define('CustomApp', {
         var transformConfig = {
           rangeSpec: rangeSpec,
           derivedFields: derivedFields,
-          aggregations: aggregationSpec,
+          aggregationSpec: aggregationSpec,
           timezone: this.workspaceConfig.get('TimeZone'),
           snapshotValidFromField: '_ValidFrom',
           snapshotValidToField: '_ValidTo',
@@ -312,7 +338,7 @@ Ext.define('CustomApp', {
         };
 
         // for transform closure
-        var lumenize = this.lumenize;
+        var app = this;
 
         var transformStore = Ext.create('Rally.data.custom.TransformStore', {
               wrappedStoreType: 'Rally.data.lookback.SnapshotStoreOtherUrl',
@@ -323,8 +349,14 @@ Ext.define('CustomApp', {
 
                     var jsonObjects = Ext.Array.pluck(models, 'raw');
 
-                    //TODO figure this out and if other passes are needed
-                    return lumenize.timeSeriesCalculator(jsonObjects, transformConfig);
+                    var calculationResult = app.lumenize.timeSeriesCalculator(jsonObjects, transformConfig);
+
+                    //TODO handle future rename of listOfAtCTs and aggreationAtArray
+                    app.categories = Ext.Array.map(calculationResult.listOfAtCTs,
+                                                   function(chartTime){
+                                                      return chartTime.toString();
+                                                   });
+                    return calculationResult.aggregationAtArray;
 
                   },
                   config: transformConfig
@@ -339,127 +371,26 @@ Ext.define('CustomApp', {
           });
       },
 
-      convertGroupingsToRows: function(groups){
-        var rows = [];
-
-        for(var group in groups){
-          if( groups.hasOwnProperty(group) ){
-            rows.push({
-              "ScheduleState": group,
-              "ObjectID_Count": groups[group]['ObjectID_$count']
-            });
+      _setPath: function(obj, pathStr, defaultValue){
+        var path = pathStr.split('.');
+        for(var i=0, l=path.length; i < l; ++i){
+          var currentField = path[i];
+          if(!obj[currentField]){
+            // default to an empty object if not the last field
+            obj[currentField] = (i < l-1) ? {} : defaultValue;
           }
+          obj = obj[currentField];
         }
-
-        return { "rows": rows };
       },
 
       onTransformStoreLoad: function(store, records){
-        var rows = this.convertGroupingsToRows(records[0]);
-
-        var inMemoryStore = Ext.create('Ext.data.Store', {
-            fields: ["ScheduleState", "ObjectID_Count"],
-            data: rows,
-            proxy: {
-                type: 'memory',
-                reader: {
-                    type: 'json',
-                    root: 'rows'
-                }
-            }
-        });
-
-        var chartConfigStr = this._getFieldValue('chartConfig');
-        var chartConfig = Ext.decode(chartConfigStr);
-
-
-        // var chartConfig = {
-        //     xtype : 'rallychart',
-        //     id : 'chart',
-
-        //     store: inMemoryStore,
-
-        //     height: 400,
-        //     series : [
-        //     {
-        //       type : 'column',
-        //       yField : 'ObjectID_Count',
-        //       name : 'Count',
-        //       visible : true
-        //     },
-        //     {
-        //       type : 'line',
-        //       yField : 'ObjectID_Count',
-        //       name : 'Count',
-        //       visible : true
-        //     }
-        //     ],
-
-        //     xField : 'ScheduleState',
-        //     chartConfig : {
-        //       chart : {
-        //         marginRight : 130,
-        //         marginBottom : 250,
-        //         zoomType : 'x',
-        //         animation : {
-        //           duration : 1500,
-        //           easing : 'swing'
-        //         }
-        //       },
-        //       title : {
-        //         text : 'Schedule State Counts',
-        //         align: 'center'
-        //       },
-        //       xAxis : [{
-        //         title : {
-        //           text : 'ScheduleState',
-        //           margin : 40
-        //         },
-        //         labels : {
-        //           align: 'right',
-        //           rotation : 300
-        //         }
-        //       }],
-        //       yAxis : {
-        //         title : {
-        //           text : 'Count'
-        //         },
-        //         plotLines : [{
-        //           value : 0,
-        //           width : 1,
-        //           color : '#808080'
-        //         }]
-        //       },
-        //       plotOptions : {
-        //           column: {
-        //               color: '#F00'
-        //           },
-        //         series : {
-        //           animation : {
-        //             duration : 3000,
-        //             easing : 'swing'
-        //           }
-        //         }
-        //       },
-        //       tooltip : {
-        //         formatter : function() {
-        //           return this.x + ': ' + this.y;
-        //         }
-        //       },
-        //       legend : {
-        //         layout : 'vertical',
-        //         align : 'right',
-        //         verticalAlign : 'top',
-        //         x : -10,
-        //         y : 100,
-        //         borderWidth : 0
-        //       }
-        //     }
-        //   };
+        var rallyChartConfig = this._getJsonFieldValue('chartConfig');
+        this._setPath(rallyChartConfig, "chartConfig.xAxis.categories", this.categories);
+        this._setPath(rallyChartConfig, "store", store);
 
         var chartHolder = this.down('#chartHolder');
         chartHolder.removeAll(true);
-        chartHolder.add(chartConfig);
+        chartHolder.add(rallyChartConfig);
     }
 
 });

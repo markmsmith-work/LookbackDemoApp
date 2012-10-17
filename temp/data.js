@@ -1,39 +1,39 @@
 var derived fields =[
-    {
-      name: 'P1',
-       f: function(row) {
-         if(row.Priority == 'Resolve Immediately'){
-           return 1;
-         }
-         else{
-           return 0;
-         }
-      }
-    },
-    {
-      name: 'P2',
-       f: function(row) {
-         if(row.Priority == 'High Attention'){
-           return 1;
-         }
-         else{
-           return 0;
-         }
+  {
+    name: 'p1',
+    f: function(row) {
+       if(row.Priority == 'Resolve Immediately'){
+         return 1;
+       }
+       else{
+         return 0;
        }
     }
-  ];
+  },
+  {
+    name: 'p2',
+    f: function(row) {
+       if(row.Priority == 'High Attention'){
+         return 1;
+       }
+       else{
+         return 0;
+       }
+     }
+  }
+];
 
   aggregations =
   [
     {
-      name: "P1 Count",
+      as: "P1 Count",
       f: '$sum',
-      field: 'P1'
+      field: 'p1'
     },
     {
-      name: "P2 Count",
+      as: "P2 Count",
       f: '$sum',
-      field: 'P2'
+      field: 'p2'
     }
 ];
 
@@ -70,15 +70,28 @@ var rallyChartConfig = {
       {
           name : "P1 Count",
           id: "p1CountSeries",
-          visible : true,
-          data: []
+          yField: 'p1Count',
+          visible : true
       },
       {
           name : "P2 Count",
           id: "p2CountSeries",
-          visible : true,
-          data: []
+          yField: 'p2Count',
+          visible : true
       }
     ]
   }
 };
+
+
+var timeSeriesCalculatorOutput = [
+ {
+  listOfAtCTs: ["x1", "x2"],
+  aggregationAtArray: [
+    {
+      p1Count: 2,
+      p2Count: 5
+    }
+  ]
+ }
+];

@@ -52,7 +52,7 @@ Ext.define('CustomApp', {
                     value: '{\n'+
                            '    "pastEnd": "this day in Pacific/Fiji",\n'+
                            '    "limit": 22,\n'+
-                           '    "workdays": "foo",\n'+
+                           '    "workdays": ["Monday","Tuesday", "Wednesday", "Thursday","Friday"],\n'+
                            '    "holidays": [\n'+
                            '        {\n'+
                            '            "month": 1,\n'+

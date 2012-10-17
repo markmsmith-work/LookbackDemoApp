@@ -1,5 +1,4 @@
-  derived fields =
-  [
+var derived fields =[
     {
       name: 'P1',
        f: function(row) {
@@ -22,7 +21,7 @@
          }
        }
     }
-  ]
+  ];
 
   aggregations =
   [
@@ -32,17 +31,16 @@
       field: 'P1'
     },
     {
-      name: "P1 Count",
+      name: "P2 Count",
       f: '$sum',
-      field: 'P1'
+      field: 'P2'
     }
-]
+];
 
-{
+var rallyChartConfig = {
   xtype: 'rallychart',
   itemId: 'chart',
   height: 400,
-  xField:
 
   chartConfig: {
     chart: {
@@ -83,4 +81,4 @@
       }
     ]
   }
-}
+};

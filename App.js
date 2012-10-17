@@ -4,7 +4,7 @@ Ext.define('Rally.data.lookback.SnapshotStoreOtherUrl', {
         constructor: function(config) {
             this.callParent([config]);
             // temporary override needed since need different server and workspace
-            this.proxy.url = 'https://hackathon.rallydev.com/analytics/v2.0/service/rally/workspace/41529001/artifact/snapshot/query';
+            this.proxy.url = 'https://hackathon.rallydev.com/analytics2/v2.0/service/rally/workspace/41529001/artifact/snapshot/query';
         }
     });
 
@@ -18,6 +18,7 @@ Ext.define('CustomApp', {
     items:[
         {
             xtype: 'panel',
+            itemId: 'topLevelPanel',
             layout: 'anchor',
             border: true,
             fieldDefaults: {
@@ -26,28 +27,20 @@ Ext.define('CustomApp', {
             defaultType: 'textarea',
             bodyPadding: 5,
             items: [
-                {
-                    fieldLabel: 'Lookback Query',
-                    itemId: 'queryField',
-                    anchor:'100%',
-                    width: 700,
-                    height: 100,
-                    value: '{\n'+
-                            '     _TypeHierarhcy:"Defect",\n'+
-                            '     Priority:{$in:["Resolve Immediately", "High Attention"]},\n'+
-                            '     _ProjectHierarchy: __PROJECT_OID__\n'+
-                            '}'
-                },
+                // query text area will be added here by launch
+
                 {
                     xtype: 'textfield',
                     fieldLabel: 'Fields',
                     itemId: 'fieldsField',
+                    width: 500,
                     value: '["_ValidFrom", "_ValidTo", "ObjectID", "Priority"]'
                 },
                 {
                     xtype: 'textfield',
                     fieldLabel: 'Hydrate',
                     itemId: 'hydrateField',
+                    width: 500,
                     value: '["Priority"]'
                 },
                 {
@@ -158,17 +151,58 @@ Ext.define('CustomApp', {
         var button = this.down('#chartItButton');
         button.on('click', this.chartItClicked, this);
 
+        // need to add here to get projectOID from environment
+        this._addQueryPanel();
+
         this.retrieveWorkspaceConfig();
     },
 
+    _addQueryPanel: function(){
+      var projectOID = this._getProjectOid();
+
+      var queryFieldConfig = {
+            fieldLabel: 'Lookback Query',
+            itemId: 'queryField',
+            anchor:'100%',
+            width: 700,
+            height: 100,
+            value: '{\n'+
+                    '     _TypeHierarhcy:"Defect",\n'+
+                    '     Priority:{$in:["Resolve Immediately", "High Attention"]},\n'+
+                    '     _ProjectHierarchy: '+ projectOID +'\n'+
+                    '}'
+        };
+        this.down('#topLevelPanel').insert(0, queryFieldConfig);
+    },
+
+    _getProjectOid: function(){
+      // check if the hangman variable has set it from the ALM settings panel
+      if( !isNaN('__PROJECT_OID__') ){
+        return __PROJECT_OID__;
+      }
+
+      // fall back to the app context
+      return this.getContext().getProject().ObjectID;
+    },
+
+    _getWorkspaceRef: function(){
+      // check if the hangman variable has set it from the ALM settings panel
+      if( !isNaN('__WORKSPACE_OID__') ){
+        return 'workspace/__WORKSPACE_OID__';
+      }
+
+      // fall back to the app context
+      return this.getContext().getWorkspace()._ref;
+    },
+
     retrieveWorkspaceConfig: function(){
-      var workspaceObj = this.getContext().getWorkspace();
+      var workspaceRef = this._getWorkspaceRef();
 
       // debugger;
       var workspaceConfigStore = Ext.create('Rally.data.WsapiDataStore', {
         model: 'workspaceconfiguration',
         context: {
-          workspace: workspaceObj._ref,
+          workspace: workspaceRef,
           project: null
         },
         listeners:{
@@ -176,12 +210,15 @@ Ext.define('CustomApp', {
           scope: this
         },
         fetch: ['ObjectID', 'TimeZone', 'WorkDays'],
+
+        /* doesn't work, so just scope query */
         // filters: [
         //   {
         //       property: 'ObjectID',
         //       value: workspaceObj.ObjectID
         //   }
         // ],
+
         autoLoad: true
       });
 
@@ -255,7 +292,13 @@ Ext.define('CustomApp', {
             },
             rawFind: query,
             fields: fields,
-            hydrate: hydrate
+            hydrate: hydrate,
+            sorters: [
+              {
+                  property: '_ValidFrom',
+                  direction: 'ASC'
+              }
+            ]
         };
 
         var transformConfig = {
@@ -277,7 +320,6 @@ Ext.define('CustomApp', {
 
               transform: {
                   method: function(models, transformConfig){
-                    //TODO sort by _ValidFrom somewhere
 
                     var jsonObjects = Ext.Array.pluck(models, 'raw');
 

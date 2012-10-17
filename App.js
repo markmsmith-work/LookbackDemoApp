@@ -211,6 +211,7 @@ Ext.define('CustomApp', {
             value: '{\n'+
                     '     _TypeHierarchy:"Defect",\n'+
                     '     Priority:{$in:["Resolve Immediately", "High Attention"]},\n'+
+                    '     State:{$in:["Open", "Submitted"]},\n'+
                     '     _ProjectHierarchy: '+ projectOID +'\n'+
                     '}'
         };
@@ -240,7 +241,6 @@ Ext.define('CustomApp', {
     retrieveWorkspaceConfig: function(){
       var workspaceRef = this._getWorkspaceRef();
 
-      // debugger;
       var workspaceConfigStore = Ext.create('Rally.data.WsapiDataStore', {
         model: 'workspaceconfiguration',
         context: {
@@ -324,7 +324,8 @@ Ext.define('CustomApp', {
                   property: '_ValidFrom',
                   direction: 'ASC'
               }
-            ]
+            ],
+            pageSize: 20000
         };
 
         var transformConfig = {
@@ -348,7 +349,6 @@ Ext.define('CustomApp', {
                   method: function(models, transformConfig){
 
                     var jsonObjects = Ext.Array.pluck(models, 'raw');
-
                     var calculationResult = app.lumenize.timeSeriesCalculator(jsonObjects, transformConfig);
 
                     //TODO handle future rename of listOfAtCTs and aggreationAtArray

@@ -1,3 +1,4 @@
+(function(){
 Ext.define('Rally.data.lookback.SnapshotStoreOtherUrl', {
         extend: 'Rally.data.lookback.SnapshotStore',
 
@@ -7,6 +8,9 @@ Ext.define('Rally.data.lookback.SnapshotStoreOtherUrl', {
             this.proxy.url = 'https://rally1.rallydev.com/analytics2/v2.0/service/rally/workspace/41529001/artifact/snapshot/query';
         }
     });
+
+var TEXT_AREA_WIDTH = 500;
+var TEXT_AREA_HEIGHT = 100;
 
 Ext.define('CustomApp', {
     extend: 'Rally.app.App',
@@ -18,37 +22,78 @@ Ext.define('CustomApp', {
     items:[
         {
             xtype: 'panel',
-            itemId: 'topLevelPanel',
-            layout: 'anchor',
-            border: true,
-            fieldDefaults: {
-                labelWidth: 40
+            itemId: 'accordianPanel',
+            layout: {
+              type: 'accordion',
+              titleCollapse: true,
+              animate: true,
+              multi: true,
+              collapseFirst: true
+              // manageOverflow:2
             },
-            defaultType: 'textarea',
-            bodyPadding: 5,
+            border: true,
+            defaultType: 'panel',
+            defaults:{
+              collapsed: true
+            },
             items: [
-                // query text area will be added here by launch()
+              {
+                title: 'Lookback Query',
+                itemId: 'lookbackQueryPanel',
+                collapsed: false,
+                layout: {
+                  type: 'hbox',
+                  align: 'middle',
+                  padding: '0 5px'
+                },
+                defaultType: 'textarea',
+                defaults: {
+                    labelWidth: 30
+                },
+                bodyPadding: 5,
+                items: [
+                    // query text area will be added here by launch()
 
-                {
-                    xtype: 'textfield',
-                    fieldLabel: 'Fields',
-                    itemId: 'fieldsField',
-                    width: 500,
-                    value: '["_ValidFrom", "_ValidTo", "ObjectID", "Priority"]'
-                },
-                {
-                    xtype: 'textfield',
-                    fieldLabel: 'Hydrate',
-                    itemId: 'hydrateField',
-                    width: 500,
-                    value: '["Priority"]'
-                },
-                {
-                    fieldLabel: 'Timeline Spec',
+                    {
+                      xtype: 'panel',
+                      border: false,
+                      itemId: 'fieldsPanel',
+                      layout: {
+                        type: 'vbox',
+                        padding: '0 15px'
+                      },
+                      defaultType: 'textfield',
+                      defaults: {
+                        labelWidth: 45,
+                        width: TEXT_AREA_WIDTH
+                      },
+                      items: [
+                        {
+                          fieldLabel: 'Fields',
+                          itemId: 'fieldsField',
+                          value: '["_ValidFrom", "_ValidTo", "ObjectID", "Priority"]'
+                        },
+                        {
+                          fieldLabel: 'Hydrate',
+                          itemId: 'hydrateField',
+                          value: '["Priority"]'
+                        }
+                      ]
+                    }
+                ]
+
+              },
+              {
+                title: 'Timeline Spec',
+                itemId: 'timelinePanel',
+                defaultType: 'textarea',
+                bodyPadding: 5,
+                items: [
+                  {
                     itemId: 'timelineSpecField',
-                    anchor:'100%',
-                    width: 700,
+                    width: TEXT_AREA_WIDTH,
                     height: 100,
+                    resizable: true,
                     value: '{\n'+
                            '    "pastEnd": "this day in Pacific/Fiji",\n'+
                            '    "limit": 22,\n'+
@@ -65,63 +110,81 @@ Ext.define('CustomApp', {
                            '        "2012-09-03"\n'+
                            '    ]\n'+
                            '}'
+                  }
+                ]
+              },
+              {
+                title: 'Data Transform',
+                itemId: 'dataTransformPanel',
+                layout: {
+                  type: 'hbox',
+                  align: 'middle',
+                  defaultMargins: '5 0 5 15'
                 },
-                {
-                    fieldLabel: 'Derived Fields',
-                    itemId: 'derivedFieldsField',
-                    anchor: '100%',
-                    width: 700,
-                    height: 100,
-                    value: '[\n'+
-                           '    {\n'+
-                           '        "name": "p1",\n'+
-                           '        "f": function (row) {\n'+
-                           '         if(row.Priority == "Resolve Immediately"){\n'+
-                           '           return 1;\n'+
-                           '         }\n'+
-                           '         else{\n'+
-                           '           return 0;\n'+
-                           '         }\n'+
-                           '      }\n'+
-                           '    },\n'+
-                           '    {\n'+
-                           '        "name": "p2",\n'+
-                           '        "f": function (row) {\n'+
-                           '         if(row.Priority == "High Attention"){\n'+
-                           '           return 1;\n'+
-                           '         }\n'+
-                           '         else{\n'+
-                           '           return 0;\n'+
-                           '         }\n'+
-                           '       }\n'+
-                           '    }\n'+
-                           ']'
+                defaultType: 'textarea',
+                defaults: {
+                    labelWidth: 70,
+                    width: TEXT_AREA_WIDTH,
+                    height: TEXT_AREA_HEIGHT
                 },
-                {
-                    fieldLabel: 'Aggregation Spec',
-                    itemId: 'aggregationSpecField',
-                    anchor: '100%',
-                    width: 700,
-                    height: 100,
-                    value: '[\n'+
-                           '    {\n'+
-                           '        "as": "p1Count",\n'+
-                           '        "f": "$sum",\n'+
-                           '        "field": "p1"\n'+
-                           '    },\n'+
-                           '    {\n'+
-                           '        "as": "p2Count",\n'+
-                           '        "f": "$sum",\n'+
-                           '        "field": "p2"\n'+
-                           '    }\n'+
-                           ']'
-                },
-                {
-                    fieldLabel: 'Chart Config',
+                items:[
+                  {
+                      fieldLabel: 'Derived Fields',
+                      itemId: 'derivedFieldsField',
+                      value: '[\n'+
+                             '    {\n'+
+                             '        "name": "p1",\n'+
+                             '        "f": function (row) {\n'+
+                             '         if(row.Priority == "Resolve Immediately"){\n'+
+                             '           return 1;\n'+
+                             '         }\n'+
+                             '         else{\n'+
+                             '           return 0;\n'+
+                             '         }\n'+
+                             '      }\n'+
+                             '    },\n'+
+                             '    {\n'+
+                             '        "name": "p2",\n'+
+                             '        "f": function (row) {\n'+
+                             '         if(row.Priority == "High Attention"){\n'+
+                             '           return 1;\n'+
+                             '         }\n'+
+                             '         else{\n'+
+                             '           return 0;\n'+
+                             '         }\n'+
+                             '       }\n'+
+                             '    }\n'+
+                             ']'
+                  },
+                  {
+                      fieldLabel: 'Aggregation Spec',
+                      itemId: 'aggregationSpecField',
+                      margins: '5 15 5 15',
+                      value: '[\n'+
+                             '    {\n'+
+                             '        "as": "p1Count",\n'+
+                             '        "f": "$sum",\n'+
+                             '        "field": "p1"\n'+
+                             '    },\n'+
+                             '    {\n'+
+                             '        "as": "p2Count",\n'+
+                             '        "f": "$sum",\n'+
+                             '        "field": "p2"\n'+
+                             '    }\n'+
+                             ']'
+                  }
+                ]
+              },
+              {
+                title: 'Chart Config',
+                defaultType: 'textarea',
+                bodyPadding: '5 15',
+                items: [
+                  {
                     itemId: 'chartConfigField',
-                    anchor:'100%',
-                    width: 700,
-                    height: 100,
+                    width: TEXT_AREA_WIDTH,
+                    height: TEXT_AREA_HEIGHT,
+                    resizable: true,
                     value: '{\n'+
                            '    "xtype": "rallychart",\n'+
                            '    "itemId": "chart",\n'+
@@ -166,16 +229,18 @@ Ext.define('CustomApp', {
                            '        }\n'+
                            '    ]\n'+
                            '}'
-                }
+                  }
+                ]
+              }
             ],
-
             buttons: [
                 {
                     xtype: 'rallybutton',
                     text: 'Chart It!',
                     itemId: 'chartItButton',
                     disabled: true
-                }
+                },
+                '->'
             ]
         },
         {
@@ -203,11 +268,11 @@ Ext.define('CustomApp', {
       var projectOID = this._getProjectOid();
 
       var queryFieldConfig = {
-            fieldLabel: 'Lookback Query',
+            fieldLabel: 'Find',
             itemId: 'queryField',
-            anchor:'100%',
-            width: 700,
-            height: 100,
+            width: TEXT_AREA_WIDTH,
+            height: TEXT_AREA_HEIGHT,
+            // resizable: true,
             value: '{\n'+
                     '     _TypeHierarchy:"Defect",\n'+
                     '     Priority:{$in:["Resolve Immediately", "High Attention"]},\n'+
@@ -215,7 +280,7 @@ Ext.define('CustomApp', {
                     '     _ProjectHierarchy: '+ projectOID +'\n'+
                     '}'
         };
-        this.down('#topLevelPanel').insert(0, queryFieldConfig);
+        this.down('#lookbackQueryPanel').insert(0, queryFieldConfig);
     },
 
     _getProjectOid: function(){
@@ -393,3 +458,4 @@ Ext.define('CustomApp', {
     }
 
 });
+})();

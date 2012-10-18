@@ -7,7 +7,247 @@ Ext.define('Rally.data.lookback.SnapshotStoreOtherUrl', {
             // temporary override needed since need different server and workspace
             this.proxy.url = 'https://rally1.rallydev.com/analytics2/v2.0/service/rally/workspace/41529001/artifact/snapshot/query';
         }
-    });
+});
+
+var predefinedChartsStore = Ext.create('Ext.data.Store', {
+    fields: ['name', 'values'],
+    data : [
+        {
+          name: 'P1 & P2 Count Chart',
+          values: {
+            find: '{\n'+
+                  '     _TypeHierarchy:"Defect",\n'+
+                  '     Priority:{$in:["Resolve Immediately", "High Attention"]},\n'+
+                  '     State:{$in:["Open", "Submitted"]},\n'+
+                  '     _ProjectHierarchy: __PROJECT_OID__\n'+
+                  '}',
+            fields: '["_ValidFrom", "_ValidTo", "ObjectID", "Priority"]',
+            hydrate: '["Priority"]',
+            timelineSpec: '{\n'+
+                          '    "pastEnd": "this day in Pacific/Fiji",\n'+
+                          '    "limit": 22,\n'+
+                          '    "workdays": ["Monday","Tuesday", "Wednesday", "Thursday","Friday"],\n'+
+                          '    "holidays": [\n'+
+                          '        {\n'+
+                          '            "month": 1,\n'+
+                          '            "day": 1\n'+
+                          '        },\n'+
+                          '        {\n'+
+                          '            "month": 12,\n'+
+                          '            "day": 25\n'+
+                          '        },\n'+
+                          '        "2012-09-03"\n'+
+                          '    ]\n'+
+                          '}',
+            derivedFields: '[\n'+
+                           '    {\n'+
+                           '        "name": "p1",\n'+
+                           '        "f": function (row) {\n'+
+                           '         if(row.Priority == "Resolve Immediately"){\n'+
+                           '           return 1;\n'+
+                           '         }\n'+
+                           '         else{\n'+
+                           '           return 0;\n'+
+                           '         }\n'+
+                           '      }\n'+
+                           '    },\n'+
+                           '    {\n'+
+                           '        "name": "p2",\n'+
+                           '        "f": function (row) {\n'+
+                           '         if(row.Priority == "High Attention"){\n'+
+                           '           return 1;\n'+
+                           '         }\n'+
+                           '         else{\n'+
+                           '           return 0;\n'+
+                           '         }\n'+
+                           '       }\n'+
+                           '    }\n'+
+                           ']',
+            aggregationSpec: '[\n'+
+                             '    {\n'+
+                             '        "as": "p1Count",\n'+
+                             '        "f": "$sum",\n'+
+                             '        "field": "p1"\n'+
+                             '    },\n'+
+                             '    {\n'+
+                             '        "as": "p2Count",\n'+
+                             '        "f": "$sum",\n'+
+                             '        "field": "p2"\n'+
+                             '    }\n'+
+                             ']',
+            chartConfig: '{\n'+
+                         '    "xtype": "rallychart",\n'+
+                         '    "itemId": "chart",\n'+
+                         '    "height": 400,\n'+
+                         '    "chartConfig": {\n'+
+                         '        "chart": {\n'+
+                         '            "defaultSeriesType": "line"\n'+
+                         '        },\n'+
+                         '        "credits": {\n'+
+                         '            "enabled": false\n'+
+                         '        },\n'+
+                         '        "title": {\n'+
+                         '            "text": "Count of P1s and P2s over time"\n'+
+                         '        },\n'+
+                         '        "xAxis": {\n'+
+                         '            "tickmarkPlacement": "on",\n'+
+                         '            "title": {\n'+
+                         '                "enabled": false\n'+
+                         '            }\n'+
+                         '        },\n'+
+                         '        "yAxis": [\n'+
+                         '            {\n'+
+                         '                "title": {\n'+
+                         '                    "text": "Count"\n'+
+                         '                },\n'+
+                         '                "min": 0\n'+
+                         '            }\n'+
+                         '        ]\n'+
+                         '    },\n'+
+                         '    "series": [\n'+
+                         '        {\n'+
+                         '            "name": "P1 Count",\n'+
+                         '            "id": "p1CountSeries",\n'+
+                         '            "yField": "p1Count",\n'+
+                         '            "visible": true\n'+
+                         '        },\n'+
+                         '        {\n'+
+                         '            "name": "P2 Count",\n'+
+                         '            "id": "p2CountSeries",\n'+
+                         '            "yField": "p2Count",\n'+
+                         '            "visible": true\n'+
+                         '        }\n'+
+                         '    ]\n'+
+                         '}'
+          }
+        },
+
+        {
+          name: 'Burnup Chart',
+          values: {
+            find: '{\n'+
+                  '    "_ItemHierarchy": 5438613816,\n'+
+                  '    "_TypeHierarchy": "HierarchicalRequirement",\n'+
+                  '    "Parent": null\n'+
+                  '}',
+            fields: '[\n'+
+                    '    "_ValidFrom",\n'+
+                    '    "_ValidTo",\n'+
+                    '    "ObjectID",\n'+
+                    '    "ScheduleState"\n'+
+                    ']',
+            hydrate: '[\n'+
+                     '    "ScheduleState"\n'+
+                     ']',
+            timelineSpec: '{\n'+
+                          '    "pastEnd": "this day in Pacific/Fiji",\n'+
+                          '    "limit": 160,\n'+
+                          '    "workdays": [\n'+
+                          '        "Monday",\n'+
+                          '        "Tuesday",\n'+
+                          '        "Wednesday",\n'+
+                          '        "Thursday",\n'+
+                          '        "Friday"\n'+
+                          '    ],\n'+
+                          '    "holidays": [\n'+
+                          '        {\n'+
+                          '            "month": 1,\n'+
+                          '            "day": 1\n'+
+                          '        },\n'+
+                          '        {\n'+
+                          '            "month": 12,\n'+
+                          '            "day": 25\n'+
+                          '        },\n'+
+                          '        "2012-09-03"\n'+
+                          '    ]\n'+
+                          '}',
+            derivedFields: '[\n'+
+                           '    {\n'+
+                           '        "name": "accepted",\n'+
+                           '        "f": function (row) {\n'+
+                           '         if(row.ScheduleState == "Accepted" || row.ScheduleState == "Released"){\n'+
+                           '           return 1;\n'+
+                           '         }\n'+
+                           '         else{\n'+
+                           '           return 0;\n'+
+                           '         }\n'+
+                           '      }\n'+
+                           '    }\n'+
+                           ']',
+            aggregationSpec: '[\n'+
+                             '    {\n'+
+                             '        "as": "scope",\n'+
+                             '        "f": "$count",\n'+
+                             '        "field": "ObjectID"\n'+
+                             '    },\n'+
+                             '    {\n'+
+                             '        "as": "accepted",\n'+
+                             '        "f": "$sum",\n'+
+                             '        "field": "accepted"\n'+
+                             '    }\n'+
+                             ']',
+            chartConfig: '{\n'+
+                         '    "xtype": "rallychart",\n'+
+                         '    "itemId": "chart",\n'+
+                         '    "height": 400,\n'+
+                         '    "chartConfig": {\n'+
+                         '        "chart": {\n'+
+                         '            "defaultSeriesType": "line"\n'+
+                         '        },\n'+
+                         '        "credits": {\n'+
+                         '            "enabled": false\n'+
+                         '        },\n'+
+                         '        "title": {\n'+
+                         '            "text": "Burnup"\n'+
+                         '        },\n'+
+                         '        "xAxis": {\n'+
+                         '            "tickmarkPlacement": "on",\n'+
+                         '            "tickInterval": 14,\n'+
+                         '            "title": {\n'+
+                         '                "enabled": false\n'+
+                         '            }\n'+
+                         '        },\n'+
+                         '        "yAxis": [\n'+
+                         '            {\n'+
+                         '                "title": {\n'+
+                         '                    "text": "Counts of Leaf Stories"\n'+
+                         '                },\n'+
+                         '                "min": 0\n'+
+                         '            }\n'+
+                         '        ]\n'+
+                         '    },\n'+
+                         '    "series": [\n'+
+                         '        {\n'+
+                         '            "name": "Scope",\n'+
+                         '            "id": "scopeSeries",\n'+
+                         '            "yField": "scope",\n'+
+                         '            "visible": true\n'+
+                         '        },\n'+
+                         '        {\n'+
+                         '            "name": "Accepted",\n'+
+                         '            "id": "acceptedSeries",\n'+
+                         '            "yField": "accepted",\n'+
+                         '            "visible": true\n'+
+                         '        }\n'+
+                         '    ]\n'+
+                         '}'
+          }
+        },
+
+        {
+          name: 'Custom (clear all fields)',
+          values: {
+            find: '',
+            fields: '',
+            hydrate: '',
+            timelineSpec: '',
+            derivedFields: '',
+            aggregationSpec: '',
+            chartConfig: ''
+          }
+        }
+    ]
+});
 
 var TEXT_AREA_WIDTH = 500;
 var TEXT_AREA_HEIGHT = 100;
@@ -20,6 +260,22 @@ Ext.define('CustomApp', {
         align: 'stretch'
     },
     items:[
+        {
+          xtype: 'panel',
+          bodyPadding: 15,
+          items:[
+            {
+              xtype: 'combo',
+              itemId: 'predefinedChartCombo',
+              fieldLabel: 'Predefined Chart',
+              store: predefinedChartsStore,
+              queryMode: 'local',
+              displayField: 'name',
+              valueField: 'values',
+              forceSelection: true
+            }
+          ]
+        },
         {
             xtype: 'panel',
             itemId: 'accordianPanel',
@@ -34,7 +290,7 @@ Ext.define('CustomApp', {
             border: true,
             defaultType: 'panel',
             defaults:{
-              collapsed: true
+              //collapsed: true
             },
             items: [
               {
@@ -70,13 +326,11 @@ Ext.define('CustomApp', {
                       items: [
                         {
                           fieldLabel: 'Fields',
-                          itemId: 'fieldsField',
-                          value: '["_ValidFrom", "_ValidTo", "ObjectID", "Priority"]'
+                          itemId: 'fieldsField'
                         },
                         {
                           fieldLabel: 'Hydrate',
-                          itemId: 'hydrateField',
-                          value: '["Priority"]'
+                          itemId: 'hydrateField'
                         }
                       ]
                     }
@@ -93,23 +347,7 @@ Ext.define('CustomApp', {
                     itemId: 'timelineSpecField',
                     width: TEXT_AREA_WIDTH,
                     height: 100,
-                    resizable: true,
-                    value: '{\n'+
-                           '    "pastEnd": "this day in Pacific/Fiji",\n'+
-                           '    "limit": 22,\n'+
-                           '    "workdays": ["Monday","Tuesday", "Wednesday", "Thursday","Friday"],\n'+
-                           '    "holidays": [\n'+
-                           '        {\n'+
-                           '            "month": 1,\n'+
-                           '            "day": 1\n'+
-                           '        },\n'+
-                           '        {\n'+
-                           '            "month": 12,\n'+
-                           '            "day": 25\n'+
-                           '        },\n'+
-                           '        "2012-09-03"\n'+
-                           '    ]\n'+
-                           '}'
+                    resizable: true
                   }
                 ]
               },
@@ -130,48 +368,12 @@ Ext.define('CustomApp', {
                 items:[
                   {
                       fieldLabel: 'Derived Fields',
-                      itemId: 'derivedFieldsField',
-                      value: '[\n'+
-                             '    {\n'+
-                             '        "name": "p1",\n'+
-                             '        "f": function (row) {\n'+
-                             '         if(row.Priority == "Resolve Immediately"){\n'+
-                             '           return 1;\n'+
-                             '         }\n'+
-                             '         else{\n'+
-                             '           return 0;\n'+
-                             '         }\n'+
-                             '      }\n'+
-                             '    },\n'+
-                             '    {\n'+
-                             '        "name": "p2",\n'+
-                             '        "f": function (row) {\n'+
-                             '         if(row.Priority == "High Attention"){\n'+
-                             '           return 1;\n'+
-                             '         }\n'+
-                             '         else{\n'+
-                             '           return 0;\n'+
-                             '         }\n'+
-                             '       }\n'+
-                             '    }\n'+
-                             ']'
+                      itemId: 'derivedFieldsField'
                   },
                   {
                       fieldLabel: 'Aggregation Spec',
                       itemId: 'aggregationSpecField',
-                      margins: '5 15 5 15',
-                      value: '[\n'+
-                             '    {\n'+
-                             '        "as": "p1Count",\n'+
-                             '        "f": "$sum",\n'+
-                             '        "field": "p1"\n'+
-                             '    },\n'+
-                             '    {\n'+
-                             '        "as": "p2Count",\n'+
-                             '        "f": "$sum",\n'+
-                             '        "field": "p2"\n'+
-                             '    }\n'+
-                             ']'
+                      margins: '5 15 5 15'
                   }
                 ]
               },
@@ -184,51 +386,7 @@ Ext.define('CustomApp', {
                     itemId: 'chartConfigField',
                     width: TEXT_AREA_WIDTH,
                     height: TEXT_AREA_HEIGHT,
-                    resizable: true,
-                    value: '{\n'+
-                           '    "xtype": "rallychart",\n'+
-                           '    "itemId": "chart",\n'+
-                           '    "height": 400,\n'+
-                           '    "chartConfig": {\n'+
-                           '        "chart": {\n'+
-                           '            "defaultSeriesType": "line"\n'+
-                           '        },\n'+
-                           '        "credits": {\n'+
-                           '            "enabled": false\n'+
-                           '        },\n'+
-                           '        "title": {\n'+
-                           '            "text": "Count of P1s and P2s over time"\n'+
-                           '        },\n'+
-                           '        "xAxis": {\n'+
-                           '            "tickmarkPlacement": "on",\n'+
-                           '            "title": {\n'+
-                           '                "enabled": false\n'+
-                           '            }\n'+
-                           '        },\n'+
-                           '        "yAxis": [\n'+
-                           '            {\n'+
-                           '                "title": {\n'+
-                           '                    "text": "Count"\n'+
-                           '                },\n'+
-                           '                "min": 0\n'+
-                           '            }\n'+
-                           '        ]\n'+
-                           '    },\n'+
-                           '    "series": [\n'+
-                           '        {\n'+
-                           '            "name": "P1 Count",\n'+
-                           '            "id": "p1CountSeries",\n'+
-                           '            "yField": "p1Count",\n'+
-                           '            "visible": true\n'+
-                           '        },\n'+
-                           '        {\n'+
-                           '            "name": "P2 Count",\n'+
-                           '            "id": "p2CountSeries",\n'+
-                           '            "yField": "p2Count",\n'+
-                           '            "visible": true\n'+
-                           '        }\n'+
-                           '    ]\n'+
-                           '}'
+                    resizable: true
                   }
                 ]
               }
@@ -240,7 +398,7 @@ Ext.define('CustomApp', {
                     itemId: 'chartItButton',
                     disabled: true
                 },
-                '->'
+                '->' // push the button left with a spacer
             ]
         },
         {
@@ -261,6 +419,11 @@ Ext.define('CustomApp', {
         // need to add here to get projectOID from environment
         this._addQueryPanel();
 
+        var predefinedChartCombo = this.down('#predefinedChartCombo');
+        predefinedChartCombo.on('change', this._onPredefinedChartComboSelect, this);
+        var recordSelected = predefinedChartCombo.getStore().getAt(0);
+        predefinedChartCombo.select(recordSelected);
+
         this.retrieveWorkspaceConfig();
     },
 
@@ -269,7 +432,7 @@ Ext.define('CustomApp', {
 
       var queryFieldConfig = {
             fieldLabel: 'Find',
-            itemId: 'queryField',
+            itemId: 'findField',
             width: TEXT_AREA_WIDTH,
             height: TEXT_AREA_HEIGHT,
             // resizable: true,
@@ -283,6 +446,30 @@ Ext.define('CustomApp', {
         this.down('#lookbackQueryPanel').insert(0, queryFieldConfig);
     },
 
+    _onPredefinedChartComboSelect: function(combo, newValue, oldValue){
+
+        this.setFieldValues(newValue.find, newValue.fields, newValue.hydrate, newValue.timelineSpec,
+                            newValue.derivedFields, newValue.aggregationSpec, newValue.chartConfig);
+    },
+
+    setFieldValues: function(find, fields, hydrate, timelineSpec, derivedFields, aggregationSpec, chartConfig){
+      this._setFieldValue('find', find);
+      this._setFieldValue('fields', fields);
+      this._setFieldValue('hydrate', hydrate);
+      this._setFieldValue('timelineSpec', timelineSpec);
+      this._setFieldValue('derivedFields', derivedFields);
+      this._setFieldValue('aggregationSpec', aggregationSpec);
+      this._setFieldValue('chartConfig', chartConfig);
+    },
+
+    _getField: function(fieldId){
+      return this.down('#'+ fieldId +'Field');
+    },
+
+    _setFieldValue: function(fieldId, value){
+      this._getField(fieldId).setValue(value);
+    },
+
     _getProjectOid: function(){
       // check if the hangman variable has set it from the ALM settings panel
       if( !isNaN('__PROJECT_OID__') ){
@@ -291,6 +478,16 @@ Ext.define('CustomApp', {
 
       // fall back to the app context
       return this.getContext().getProject().ObjectID;
+    },
+
+    _getWorkspaceOid: function(){
+      // check if the hangman variable has set it from the ALM settings panel
+      if( !isNaN('__WORKSPACE_OID__') ){
+        return __WORKSPACE_OID__;
+      }
+
+      // fall back to the app context
+      return this.getContext().getWorkspace().ObjectID;
     },
 
     _getWorkspaceRef: function(){
@@ -344,7 +541,7 @@ Ext.define('CustomApp', {
     },
 
     chartItClicked: function(){
-        var query = this._getJsonFieldValue('query');
+        var find = this._getJsonFieldValue('find');
         var fields = this._getJsonFieldValue('fields');
         var hydrate = this._getJsonFieldValue('hydrate');
 
@@ -359,28 +556,42 @@ Ext.define('CustomApp', {
         var derivedFields = this._getJsonWithFunctionsFieldValue('derivedFields');
         var aggregationSpec = this._getJsonFieldValue('aggregationSpec');
 
-        this.doSearch(query, fields, hydrate, rangeSpec, derivedFields, aggregationSpec);
+        this.doSearch(find, fields, hydrate, rangeSpec, derivedFields, aggregationSpec);
     },
 
-    _getFieldValue: function(fieldItemId){
-      return this.down('#'+ fieldItemId +'Field').getValue();
+    _replaceHangmen: function(str){
+      var projectOid = this._getProjectOid();
+      // need to build the regex this way rather than a literal to avoid the ALM hangman preprocessor
+      var projectOidRegEx = new RegExp('_'+'_PROJECT_OID__', 'g');
+      var result = str.replace(projectOidRegEx, projectOid);
+
+      var workspaceOid = this._getWorkspaceOid();
+      var workspaceOidRegEx = new RegExp('_'+'_WORKSPACE_OID__', 'g');
+      result = result.replace(workspaceOidRegEx, workspaceOid);
+
+      return result;
     },
 
-    _getJsonFieldValue: function(fieldItemId){
-      return Ext.decode( this._getFieldValue(fieldItemId) );
+    _getFieldValue: function(fieldId){
+      var str = this._getField(fieldId).getValue();
+      return this._replaceHangmen(str);
     },
 
-    _getJsonWithFunctionsFieldValue: function(fieldItemId){
-      return eval( this._getFieldValue(fieldItemId) );
+    _getJsonFieldValue: function(fieldId){
+      return Ext.decode( this._getFieldValue(fieldId) );
     },
 
-    doSearch: function(query, fields, hydrate, rangeSpec, derivedFields, aggregationSpec){
+    _getJsonWithFunctionsFieldValue: function(fieldId){
+      return eval( this._getFieldValue(fieldId) );
+    },
+
+    doSearch: function(find, fields, hydrate, rangeSpec, derivedFields, aggregationSpec){
         var wrappedStoreConfig = {
             context: {
                 workspace: this.context.getWorkspace(),
                 project: this.context.getProject()
             },
-            rawFind: query,
+            rawFind: find,
             fetch: fields,
             hydrate: hydrate,
             sorters: [

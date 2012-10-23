@@ -1,13 +1,4 @@
 (function(){
-Ext.define('Rally.data.lookback.SnapshotStoreOtherUrl', {
-        extend: 'Rally.data.lookback.SnapshotStore',
-
-        constructor: function(config) {
-            this.callParent([config]);
-            // temporary override needed since need different server and workspace
-            this.proxy.url = 'https://rally1.rallydev.com/analytics2/v2.0/service/rally/workspace/41529001/artifact/snapshot/query';
-        }
-});
 
 var predefinedChartsStore = Ext.create('Ext.data.Store', {
     fields: ['name', 'values'],
@@ -617,7 +608,7 @@ Ext.define('CustomApp', {
         var app = this;
 
         var transformStore = Ext.create('Rally.data.custom.TransformStore', {
-              wrappedStoreType: 'Rally.data.lookback.SnapshotStoreOtherUrl',
+              wrappedStoreType: 'Rally.data.lookback.SnapshotStore',
               wrappedStoreConfig: wrappedStoreConfig,
 
               transform: {
